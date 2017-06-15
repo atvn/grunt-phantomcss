@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="layout-test.css">
+</head>
+
+<body>
+  <div id="layout-test" class="testing">
+    <h1 class="testing__title">Tests</h1>
+    {{#if anyFailed}}
+      <div class="testing__status failed-bg">&nbsp;</div>
+    {{else}}
+      <div class="testing__status passed-bg">&nbsp;</div>
+    {{/if}}
+    <p class="testing__result">{{passedNumber}}&nbsp;passed,&nbsp;{{failedNumber}}&nbsp;failed&nbsp;of&nbsp;{{totalNumber}}&nbsp;tests.</p>
+    <ol class="testing__list">
+      {{#if isPassed}}
+        <li data-test-item class="testing__list__item passed-bg">
+      {{else}}
+        <li data-test-item class="testing__list__item failed-bg">
+      {{/if}}
+      <strong>{{itemName}}:&nbsp;<span>{{itemStatus}}</span></strong>
+      </li>
+    </ol>
+  </div>
+  <!-- @@contextStatus -->
+  <script defer src="handlebars-2.0.0.js"></script>
+  <script defer src="layout-test.js"></script>
+  <noscript>JavaScript is off. Please enable to view full site.</noscript>
+</body>
+
+</html>

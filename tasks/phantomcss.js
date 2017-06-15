@@ -50,8 +50,8 @@ var casperJSPath = findPath('casperjs', [
 ]);
 
 
-module.exports = function(grunt) {
-  grunt.registerMultiTask('phantomcss', 'CSS Regression Testing', function() {
+module.exports = function (grunt) {
+  grunt.registerMultiTask('phantomcss', 'CSS Regression Testing', function () {
     var done = this.async();
 
     // Variable object to set default values for options
@@ -65,7 +65,8 @@ module.exports = function(grunt) {
       logLevel: 'warning', // debug | info | warning | error
       phantomjsArgs: [],
       flattenFailures: true, // by default phantomcss "flattens" all failures into one folder.  If set to 'false'
-                             // then this flattening step will be skipped.
+      // then this flattening step will be skipped.
+      resultsViewerPath: ''
     });
 
     // Timeout ID for message checking loop
@@ -84,7 +85,7 @@ module.exports = function(grunt) {
     // Create a temporary file for message passing between the task and PhantomJS
     var tempFile = new tmp.File();
 
-    var deleteDiffScreenshots = function(folderpath) {
+    var deleteDiffScreenshots = function (folderpath) {
       // Find diff/fail files
       var diffScreenshots = grunt.file.expand([
         path.join(folderpath + '/' + options.screenshots, '*diff.png'),
@@ -92,35 +93,35 @@ module.exports = function(grunt) {
       ]);
 
       // Delete all of 'em
-      diffScreenshots.forEach(function(filepath) {
+      diffScreenshots.forEach(function (filepath) {
         grunt.file.delete(filepath, { force: true });
       });
     };
 
-    var deleteDiffResults = function(folderpath) {
+    var deleteDiffResults = function (folderpath) {
       // Find diff/fail files
       var diffScreenshots = grunt.file.expand([
         path.join(folderpath, options.results),
       ]);
 
       // Delete all of 'em
-      diffScreenshots.forEach(function(filepath) {
+      diffScreenshots.forEach(function (filepath) {
         grunt.file.delete(filepath, { force: true });
       });
     };
 
-    var cleanup = function(error) {
+    var cleanup = function (error) {
       // Remove temporary file
       tempFile.unlink();
 
-      options.testFolder.forEach(function(folderpath) {
+      options.testFolder.forEach(function (folderpath) {
         // Create the output directory
         grunt.file.mkdir(folderpath + '/' + options.results);
 
         // Copy fixtures, diffs, and failure images to the results directory
         var allScreenshots = grunt.file.expand(path.join(folderpath + '/' + options.screenshots, '**.png'));
 
-        allScreenshots.forEach(function(filepath) {
+        allScreenshots.forEach(function (filepath) {
           grunt.file.copy(filepath, path.join(
             folderpath + '/' + options.results,
             path.basename(filepath)
@@ -143,7 +144,7 @@ module.exports = function(grunt) {
       grunt.log.muted = false;
 
       // Iterate over all lines that haven't already been processed
-      lines.slice(lastLine).some(function(line) {
+      lines.slice(lastLine).some(function (line) {
         // Get args and method
         var args = JSON.parse(line);
         var eventName = args[0];
@@ -168,20 +169,30 @@ module.exports = function(grunt) {
       }
     };
 
+    var writeTestingPage = function () {
+      var temp = grunt.file.read('testing-template/template.html');
+      grunt.file.defaultEncoding = 'utf8';
+      grunt.file.preserveBOM = false;
+      // var aa = temp.replace('<!-- @@contextStatus -->', '<script>var context = "";</script>');
+      // console.log(aa);
+      // grunt.file.write(options.resultsViewerPath + 'layout-regression-test.html', content);
+    };
+
     var messageHandlers = {
-      onFail: function(test) {
+      onFail: function (test) {
         grunt.log.writeln('Visual change found for ' + path.basename(test.filename) + ' (' + test.mismatch + '% mismatch)');
       },
-      onPass: function(test) {
+      onPass: function (test) {
         grunt.log.writeln('No changes found for ' + path.basename(test.filename));
       },
-      onTimeout: function(test) {
+      onTimeout: function (test) {
         grunt.log.writeln('Timeout while processing ' + path.basename(test.filename));
       },
-      onComplete: function(allTests, noOfFails, noOfErrors) {
+      onComplete: function (allTests, noOfFails, noOfErrors) {
         if (allTests.length) {
           var noOfPasses = allTests.length - failureCount;
           failureCount = noOfFails + noOfErrors;
+          writeTestingPage('');
 
           if (failureCount === 0) {
             grunt.log.ok('All ' + noOfPasses + ' tests passed!');
@@ -199,7 +210,7 @@ module.exports = function(grunt) {
     // Resolve paths for tests
     options.test = [];
     options.testFolder = [];
-    this.filesSrc.forEach(function(filepath) {
+    this.filesSrc.forEach(function (filepath) {
       options.test.push(path.resolve(filepath));
       options.testFolder.push(path.dirname(filepath));
     });
@@ -217,7 +228,7 @@ module.exports = function(grunt) {
 
     // Remove old diff screenshots
 
-    options.testFolder.forEach(function(folderpath) {
+    options.testFolder.forEach(function (folderpath) {
       deleteDiffScreenshots(folderpath);
       deleteDiffResults(folderpath);
     });
@@ -237,7 +248,7 @@ module.exports = function(grunt) {
         cwd: cwd,
         stdio: 'inherit'
       }
-    }, function(error, result, code) {
+    }, function (error, result, code) {
       // When Phantom exits check for remaining messages one last time
       checkForMessages(true);
 
