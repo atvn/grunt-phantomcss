@@ -10,27 +10,44 @@
 </head>
 
 <body>
-  <div id="layout-test" class="testing">
+  <div class="testing">
     <h1 class="testing__title">Tests</h1>
     {{#if anyFailed}}
       <div class="testing__status failed-bg">&nbsp;</div>
     {{else}}
       <div class="testing__status passed-bg">&nbsp;</div>
     {{/if}}
-    <p class="testing__result">{{passedNumber}}&nbsp;passed,&nbsp;{{failedNumber}}&nbsp;failed&nbsp;of&nbsp;{{totalNumber}}&nbsp;tests.</p>
+    <p class="testing__result">{{passedNumber}} passed, {{failedNumber}} failed of {{totalNumber}} tests.</p>
     <ol class="testing__list">
-      {{#if isPassed}}
-        <li data-test-item class="testing__list__item passed-bg">
-      {{else}}
-        <li data-test-item class="testing__list__item failed-bg">
-      {{/if}}
-      <strong>{{itemName}}:&nbsp;<span>{{itemStatus}}</span></strong>
-      </li>
+      {{#each items}}
+        {{#if isPassed}}
+          <li class="testing__item passed-bg">
+            <div class="testing__item__heading">
+              <div class="testing__item__name">{{name}}</div>
+              <div class="testing__item__group">
+                <span class="status-label status-label--passed">Passed</span>
+              </div>
+            </div>
+          </li>
+        {{else}}
+          <li class="testing__item failed-bg">
+            <div class="testing__item__heading">
+              <div class="testing__item__name">{{name}}</div>
+              <div class="testing__item__group">
+                <span class="status-label status-label--failed">Failed</span>
+                <span class="mismatch">({{mismatch}} % mismatch)</span>
+                <button class="show-diff-btn">Diff</button>
+              </div>
+            </div>
+            <div class="testing__item__content">
+              <img alt="{{name}}" src="../fixtures/screenshots/{{imgFail}}">
+            </div>
+          </li>
+        {{/if}}
+      {{/each}}
     </ol>
   </div>
-  <!-- @@contextStatus -->
-  <script defer src="handlebars-2.0.0.js"></script>
-  <script defer src="layout-test.js"></script>
+  <script defer src="layout-test.js "></script>
   <noscript>JavaScript is off. Please enable to view full site.</noscript>
 </body>
 

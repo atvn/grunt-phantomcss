@@ -13,6 +13,7 @@
 
 var path = require('path');
 var fs = require('fs');
+var hbs = require('handlebars');
 
 function findPath(folderName, paths) {
   var goodPath = null;
@@ -66,7 +67,7 @@ module.exports = function (grunt) {
       phantomjsArgs: [],
       flattenFailures: true, // by default phantomcss "flattens" all failures into one folder.  If set to 'false'
       // then this flattening step will be skipped.
-      resultsViewerPath: ''
+      reportPath: '' // Path to save a HTML file for reporting
     });
 
     // Timeout ID for message checking loop
@@ -84,6 +85,14 @@ module.exports = function (grunt) {
 
     // Create a temporary file for message passing between the task and PhantomJS
     var tempFile = new tmp.File();
+
+    // Create a log contain fails result and passes result
+    var contextLog = {
+      failedNumber: 0,
+      passedNumber: 0,
+      totalNumber: 0,
+      items: []
+    };
 
     var deleteDiffScreenshots = function (folderpath) {
       // Find diff/fail files
@@ -169,40 +178,62 @@ module.exports = function (grunt) {
       }
     };
 
-    var writeTestingPage = function () {
-      var temp = grunt.file.read('testing-template/template.html');
+    var writeTestingPage = function (context) {
+      var source = grunt.file.read('testing-template/template.html');
+      var template = hbs.compile(source);
+      var html = template(context);
       grunt.file.defaultEncoding = 'utf8';
       grunt.file.preserveBOM = false;
-      // var aa = temp.replace('<!-- @@contextStatus -->', '<script>var context = "";</script>');
-      // console.log(aa);
-      // grunt.file.write(options.resultsViewerPath + 'layout-regression-test.html', content);
+      grunt.file.write(options.reportPath + 'testing-template/layout-regression-test.html', html);
     };
 
     var messageHandlers = {
       onFail: function (test) {
+        var extFile = test.filename.substr(test.filename.lastIndexOf('.'));
         grunt.log.writeln('Visual change found for ' + path.basename(test.filename) + ' (' + test.mismatch + '% mismatch)');
+        contextLog.items.push({
+          name: path.basename(test.filename),
+          isPassed: false,
+          imgOrigin: path.basename(test.filename),
+          imgDiff: path.basename(test.filename).replace(extFile, '.diff' + extFile),
+          imgFail: path.basename(test.filename).replace(extFile, '.fail' + extFile),
+          mismatch: test.mismatch
+        });
       },
       onPass: function (test) {
         grunt.log.writeln('No changes found for ' + path.basename(test.filename));
+        contextLog.items.push({
+          name: path.basename(test.filename),
+          isPassed: true
+        });
       },
       onTimeout: function (test) {
         grunt.log.writeln('Timeout while processing ' + path.basename(test.filename));
+        contextLog.items.push({
+          name: path.basename(test.filename),
+          isPassed: false
+        });
       },
       onComplete: function (allTests, noOfFails, noOfErrors) {
         if (allTests.length) {
           var noOfPasses = allTests.length - failureCount;
           failureCount = noOfFails + noOfErrors;
-          writeTestingPage('');
 
           if (failureCount === 0) {
             grunt.log.ok('All ' + noOfPasses + ' tests passed!');
           } else {
             if (noOfErrors === 0) {
+              contextLog.anyFailed = true;
               grunt.log.error(noOfFails + ' tests failed.');
             } else {
               grunt.log.error(noOfFails + ' tests failed, ' + noOfErrors + ' had errors.');
             }
           }
+
+          contextLog.totalNumber = allTests.length;
+          contextLog.failedNumber = noOfFails;
+          contextLog.passedNumber = allTests.length - failureCount;
+          writeTestingPage(contextLog);
         }
       }
     };

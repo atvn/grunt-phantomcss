@@ -9,6 +9,7 @@ html {
 }
 body {
   font-family: Helvetica, Arial, sans-serif;
+  counter-reset: section;
 }
 h1, h2, h3, p, ol {
   margin: 0;
@@ -18,13 +19,21 @@ h1, h2, h3, p, ol {
   vertical-align: baseline;
   background: transparent;
 }
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  content: " ";
+}
+.clearfix:after {
+  clear: both;
+}
 .passed-bg {
   background-color: #d2e0e6 !important;
   color: #528ce0;
 }
 .failed-bg {
-  background-color: #ee5757 !important;
-  color: #000000;
+  background-color: #ff8a80 !important;
+  color: #000;
 }
 .testing {
   font-size: 1.2rem;
@@ -32,7 +41,7 @@ h1, h2, h3, p, ol {
 .testing__title {
   background-color: #0d3349;
   font-size: 2.3rem;
-  color: white;
+  color: #fff;
   border-radius: 5px 5px 0 0;
   padding: 1.2rem 2.4rem;
 }
@@ -45,8 +54,77 @@ h1, h2, h3, p, ol {
   background-color: #d2e0e6;
   border-bottom: 1px solid white;
 }
-.testing__list__item {
-  padding: .6rem 3.2rem;
+.testing__item {
+  padding: .8rem 3.2rem .8rem 5rem;
   border-bottom: 1px solid #fff;
-  list-style-position: inside;
+  font-weight: bold;
+  position: relative;
+}
+.testing__item:before {
+  counter-increment: section;
+  content: "#" counter(section);
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}
+.testing__item__heading {
+  padding-right: 21rem;
+  position: relative;
+  min-height: 1.8rem;
+  overflow: hidden;
+}
+.testing__item__group {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20rem;
+}
+.testing__item__name {
+  line-height: 1.8rem;
+}
+.testing__item__group > * {
+  float: right;
+}
+.testing__item__content {
+  margin-top: 1.5rem;
+  border-radius: 5px;
+  padding: 1.5rem;
+  background-color: #fff;
+}
+.testing__item__content img {
+  display: block;
+  max-width: 100%;
+}
+.status-label {
+  padding: 3px;
+  color: white;
+  font-size: .9rem;
+  font-weight: normal;
+  border-radius: 4px;
+}
+.status-label--passed {
+  background-color: #5cb85c;
+}
+.status-label--failed {
+  background-color: #d9534f;
+}
+.show-diff-btn {
+  margin: 0 1.5rem 0 0;
+  padding: 0;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  vertical-align: middle;
+  line-height: 1.5;
+  font-weight: bold;
+  font-size: 1.2rem;
+  line-height: 1.8rem;
+}
+.show-diff-btn:hover {
+  text-decoration: underline;
+}
+.mismatch {
+  margin-right: 1.5rem;
+  line-height: 1.8rem;
 }
