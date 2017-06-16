@@ -179,7 +179,7 @@ module.exports = function (grunt) {
 
     var writeTestingPage = function (context) {
       var that = this;
-      var source = grunt.file.read('tasks/template.html');
+      var source = grunt.file.read(__dirname + '/template.html');
       var template = hbs.compile(source);
       var html = template(context);
       grunt.file.defaultEncoding = 'utf8';
