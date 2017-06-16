@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <style>
+    html {
+      box-sizing: border-box;
+      font-size: 10px
+    }
+    
+    *,
+    *:before,
+    *:after {
+      box-sizing: inherit
+    }
+    
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      counter-reset: section
+    }
+    
+    h1,
+    h2,
+    h3,
+    p,
+    ol {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      font-size: 100%;
+      vertical-align: baseline;
+      background: transparent
+    }
+    
+    .clearfix:before,
+    .clearfix:after {
+      display: table;
+      content: " "
+    }
+    
+    .clearfix:after {
+      clear: both
+    }
+    
+    .passed-bg {
+      background-color: #d2e0e6 !important;
+      color: #528ce0
+    }
+    
+    .failed-bg {
+      background-color: #ff8a80 !important;
+      color: #000
+    }
+    
+    .testing {
+      font-size: 1.2rem
+    }
+    
+    .testing__title {
+      background-color: #0d3349;
+      font-size: 2.3rem;
+      color: #fff;
+      border-radius: 5px 5px 0 0;
+      padding: 1.2rem 2.4rem
+    }
+    
+    .testing__status {
+      height: 5px
+    }
+    
+    .testing__result {
+      padding: 1rem 3.2rem;
+      color: #2b81af;
+      background-color: #d2e0e6;
+      border-bottom: 1px solid white
+    }
+    
+    .testing__item {
+      padding: .8rem 3.2rem .8rem 5rem;
+      border-bottom: 1px solid #fff;
+      font-weight: bold;
+      position: relative
+    }
+    
+    .testing__item:before {
+      counter-increment: section;
+      content: "#" counter(section);
+      position: absolute;
+      top: 1rem;
+      left: 1rem
+    }
+    
+    .testing__item__heading {
+      padding-right: 21rem;
+      position: relative;
+      min-height: 1.8rem;
+      overflow: hidden
+    }
+    
+    .testing__item__group {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 20rem
+    }
+    
+    .testing__item__name {
+      line-height: 1.8rem
+    }
+    
+    .testing__item__group>* {
+      float: right
+    }
+    
+    .testing__item__content {
+      margin-top: 1.5rem;
+      border-radius: 5px;
+      padding: 1.5rem;
+      background-color: #fff
+    }
+    
+    .testing__item__content img {
+      display: block;
+      max-width: 100%
+    }
+    
+    .status-label {
+      padding: 3px;
+      color: white;
+      font-size: .9rem;
+      font-weight: normal;
+      border-radius: 4px
+    }
+    
+    .status-label--passed {
+      background-color: #5cb85c
+    }
+    
+    .status-label--failed {
+      background-color: #d9534f
+    }
+    
+    .mismatch {
+      margin-right: 1.5rem;
+      line-height: 1.8rem
+    }
+  </style>
+</head>
+
+<body>
+  <div class="testing">
+    <h1 class="testing__title">Tests</h1>
+    {{#if anyFailed}}
+      <div class="testing__status failed-bg">&nbsp;</div>
+    {{else}}
+      <div class="testing__status passed-bg">&nbsp;</div>
+    {{/if}}
+    <p class="testing__result">{{passedNumber}} passed, {{failedNumber}} failed of {{totalNumber}} tests.</p>
+    <ol class="testing__list">
+      {{#each items}}
+        {{#if isPassed}}
+          <li class="testing__item passed-bg">
+            <div class="testing__item__heading">
+              <div class="testing__item__name">{{name}}</div>
+              <div class="testing__item__group">
+                <span class="status-label status-label--passed">Passed</span>
+              </div>
+            </div>
+          </li>
+        {{else}}
+          <li class="testing__item failed-bg">
+            <div class="testing__item__heading">
+              <div class="testing__item__name">{{name}}</div>
+              <div class="testing__item__group">
+                <span class="status-label status-label--failed">Failed</span>
+                <span class="mismatch">({{mismatch}} % mismatch)</span>
+              </div>
+            </div>
+            <div class="testing__item__content">
+              <img alt="{{name}}" src="{{imgFail}}">
+            </div>
+          </li>
+        {{/if}}
+      {{/each}}
+    </ol>
+  </div>
+  <noscript>JavaScript is off. Please enable to view full site.</noscript>
+</body>
+
+</html>

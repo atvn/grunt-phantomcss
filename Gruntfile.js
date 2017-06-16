@@ -46,7 +46,7 @@ module.exports = function (grunt) {
                     rootUrl: 'fixtures',
                     logLevel: 'warning', // debug | info | warning | error
                     phantomjsArgs: [
-                      '--ignore-ssl-errors=true',
+                        '--ignore-ssl-errors=true',
                     ]
                 },
                 src: [

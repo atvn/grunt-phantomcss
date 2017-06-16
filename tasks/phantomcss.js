@@ -13,6 +13,7 @@
 
 var path = require('path');
 var fs = require('fs');
+var hbs = require('handlebars');
 
 function findPath(folderName, paths) {
   var goodPath = null;
@@ -50,8 +51,8 @@ var casperJSPath = findPath('casperjs', [
 ]);
 
 
-module.exports = function(grunt) {
-  grunt.registerMultiTask('phantomcss', 'CSS Regression Testing', function() {
+module.exports = function (grunt) {
+  grunt.registerMultiTask('phantomcss', 'CSS Regression Testing', function () {
     var done = this.async();
 
     // Variable object to set default values for options
@@ -64,8 +65,8 @@ module.exports = function(grunt) {
       waitTimeout: 5000, // Set timeout to wait before throwing an exception
       logLevel: 'warning', // debug | info | warning | error
       phantomjsArgs: [],
-      flattenFailures: true, // by default phantomcss "flattens" all failures into one folder.  If set to 'false'
-                             // then this flattening step will be skipped.
+      flattenFailures: true // by default phantomcss "flattens" all failures into one folder.  If set to 'false'
+      // then this flattening step will be skipped.
     });
 
     // Timeout ID for message checking loop
@@ -84,7 +85,15 @@ module.exports = function(grunt) {
     // Create a temporary file for message passing between the task and PhantomJS
     var tempFile = new tmp.File();
 
-    var deleteDiffScreenshots = function(folderpath) {
+    // Create a log contain fails result and passes result
+    var contextLog = {
+      failedNumber: 0,
+      passedNumber: 0,
+      totalNumber: 0,
+      items: []
+    };
+
+    var deleteDiffScreenshots = function (folderpath) {
       // Find diff/fail files
       var diffScreenshots = grunt.file.expand([
         path.join(folderpath + '/' + options.screenshots, '*diff.png'),
@@ -92,35 +101,35 @@ module.exports = function(grunt) {
       ]);
 
       // Delete all of 'em
-      diffScreenshots.forEach(function(filepath) {
+      diffScreenshots.forEach(function (filepath) {
         grunt.file.delete(filepath, { force: true });
       });
     };
 
-    var deleteDiffResults = function(folderpath) {
+    var deleteDiffResults = function (folderpath) {
       // Find diff/fail files
       var diffScreenshots = grunt.file.expand([
         path.join(folderpath, options.results),
       ]);
 
       // Delete all of 'em
-      diffScreenshots.forEach(function(filepath) {
+      diffScreenshots.forEach(function (filepath) {
         grunt.file.delete(filepath, { force: true });
       });
     };
 
-    var cleanup = function(error) {
+    var cleanup = function (error) {
       // Remove temporary file
       tempFile.unlink();
 
-      options.testFolder.forEach(function(folderpath) {
+      options.testFolder.forEach(function (folderpath) {
         // Create the output directory
         grunt.file.mkdir(folderpath + '/' + options.results);
 
         // Copy fixtures, diffs, and failure images to the results directory
         var allScreenshots = grunt.file.expand(path.join(folderpath + '/' + options.screenshots, '**.png'));
 
-        allScreenshots.forEach(function(filepath) {
+        allScreenshots.forEach(function (filepath) {
           grunt.file.copy(filepath, path.join(
             folderpath + '/' + options.results,
             path.basename(filepath)
@@ -143,7 +152,7 @@ module.exports = function(grunt) {
       grunt.log.muted = false;
 
       // Iterate over all lines that haven't already been processed
-      lines.slice(lastLine).some(function(line) {
+      lines.slice(lastLine).some(function (line) {
         // Get args and method
         var args = JSON.parse(line);
         var eventName = args[0];
@@ -168,17 +177,41 @@ module.exports = function(grunt) {
       }
     };
 
+    var writeTestingPage = function (context) {
+      var that = this;
+      var source = grunt.file.read('tasks/template.html');
+      var template = hbs.compile(source);
+      var html = template(context);
+      grunt.file.defaultEncoding = 'utf8';
+      grunt.file.preserveBOM = false;
+      grunt.file.write(options.testFolder[0] + '/layout-regression-test.html', html);
+    };
+
     var messageHandlers = {
-      onFail: function(test) {
+      onFail: function (test) {
         grunt.log.writeln('Visual change found for ' + path.basename(test.filename) + ' (' + test.mismatch + '% mismatch)');
+        contextLog.items.push({
+          name: path.basename(test.filename),
+          isPassed: false,
+          imgFail: options.results + '/' + path.parse(test.filename).name + '.fail' + path.parse(test.filename).ext,
+          mismatch: test.mismatch
+        });
       },
-      onPass: function(test) {
+      onPass: function (test) {
         grunt.log.writeln('No changes found for ' + path.basename(test.filename));
+        contextLog.items.push({
+          name: path.basename(test.filename),
+          isPassed: true
+        });
       },
-      onTimeout: function(test) {
+      onTimeout: function (test) {
         grunt.log.writeln('Timeout while processing ' + path.basename(test.filename));
+        contextLog.items.push({
+          name: path.basename(test.filename),
+          isPassed: true
+        });
       },
-      onComplete: function(allTests, noOfFails, noOfErrors) {
+      onComplete: function (allTests, noOfFails, noOfErrors) {
         if (allTests.length) {
           var noOfPasses = allTests.length - failureCount;
           failureCount = noOfFails + noOfErrors;
@@ -187,11 +220,17 @@ module.exports = function(grunt) {
             grunt.log.ok('All ' + noOfPasses + ' tests passed!');
           } else {
             if (noOfErrors === 0) {
+              contextLog.anyFailed = true;
               grunt.log.error(noOfFails + ' tests failed.');
             } else {
               grunt.log.error(noOfFails + ' tests failed, ' + noOfErrors + ' had errors.');
             }
           }
+
+          contextLog.totalNumber = allTests.length;
+          contextLog.failedNumber = noOfFails;
+          contextLog.passedNumber = allTests.length - failureCount;
+          writeTestingPage(contextLog);
         }
       }
     };
@@ -199,7 +238,7 @@ module.exports = function(grunt) {
     // Resolve paths for tests
     options.test = [];
     options.testFolder = [];
-    this.filesSrc.forEach(function(filepath) {
+    this.filesSrc.forEach(function (filepath) {
       options.test.push(path.resolve(filepath));
       options.testFolder.push(path.dirname(filepath));
     });
@@ -217,7 +256,7 @@ module.exports = function(grunt) {
 
     // Remove old diff screenshots
 
-    options.testFolder.forEach(function(folderpath) {
+    options.testFolder.forEach(function (folderpath) {
       deleteDiffScreenshots(folderpath);
       deleteDiffResults(folderpath);
     });
@@ -237,7 +276,7 @@ module.exports = function(grunt) {
         cwd: cwd,
         stdio: 'inherit'
       }
-    }, function(error, result, code) {
+    }, function (error, result, code) {
       // When Phantom exits check for remaining messages one last time
       checkForMessages(true);
 

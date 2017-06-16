@@ -16,7 +16,7 @@ var fs = require('fs');
 var s = fs.separator;
 // Path not avaliable in phantomjs (for whatever reason), so...
 var system = require('system');
-var dirname = function(fullPath) {
+var dirname = function (fullPath) {
   var dname = fullPath;
   var sepIdx = fullPath.lastIndexOf(s);
   if (sepIdx >= 0) {
@@ -35,7 +35,7 @@ var viewportSize = {
 };
 
 // Messages are sent to the parent by appending them to the tempfile
-var sendMessage = function() {
+var sendMessage = function () {
   fs.write(args.tempFile, JSON.stringify(Array.prototype.slice.call(arguments)) + '\n', 'a');
 };
 
@@ -59,19 +59,19 @@ var phantomCSSOptions = {
   libraryRoot: phantomCSSPath, // Give absolute path, otherwise PhantomCSS fails
   mismatchTolerance: args.mismatchTolerance, // defaults to 0.05
 
-  onFail: function(test) {
+  onFail: function (test) {
     sendMessage('onFail', test);
   },
-  onPass: function(test) {
+  onPass: function (test) {
     sendMessage('onPass', test);
   },
-  onTimeout: function(test) {
+  onTimeout: function (test) {
     sendMessage('onTimeout', test);
   },
-  onComplete: function(allTests, noOfFails, noOfErrors) {
+  onComplete: function (allTests, noOfFails, noOfErrors) {
     sendMessage('onComplete', allTests, noOfFails, noOfErrors);
   },
-  fileNameGetter: function(root, filename) {
+  fileNameGetter: function (root, filename) {
     var name = phantomcss.pathToTest + args.screenshots + '/' + filename;
     if (fs.isFile(name + '.png')) {
       return name + '.diff.png';
@@ -90,22 +90,22 @@ phantomcss.init(phantomCSSOptions);
 
 casper.start();
 // Run the test scenarios
-args.test.forEach(function(testSuite) {
+args.test.forEach(function (testSuite) {
   phantom.casperTest = true;
   phantom.rootUrl = args.rootUrl;
-  casper.then(function() {
+  casper.then(function () {
     phantomcss.pathToTest = dirname(testSuite) + '/';
   });
   require(testSuite);
-  casper.then(function() {
+  casper.then(function () {
     phantomcss.compareSession();
   })
-  .then(function() {
-    casper.test.done();
-  });
+    .then(function () {
+      casper.test.done();
+    });
 });
 
 // End tests
-casper.run(function() {
+casper.run(function () {
   phantom.exit();
 });
