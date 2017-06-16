@@ -58,7 +58,6 @@ var phantomCSSOptions = {
   screenshotRoot: args.screenshots,
   libraryRoot: phantomCSSPath, // Give absolute path, otherwise PhantomCSS fails
   mismatchTolerance: args.mismatchTolerance, // defaults to 0.05
-  reportPath: args.reportPath,
 
   onFail: function (test) {
     sendMessage('onFail', test);

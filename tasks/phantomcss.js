@@ -65,9 +65,8 @@ module.exports = function (grunt) {
       waitTimeout: 5000, // Set timeout to wait before throwing an exception
       logLevel: 'warning', // debug | info | warning | error
       phantomjsArgs: [],
-      flattenFailures: true, // by default phantomcss "flattens" all failures into one folder.  If set to 'false'
+      flattenFailures: true // by default phantomcss "flattens" all failures into one folder.  If set to 'false'
       // then this flattening step will be skipped.
-      reportPath: '' // Path to save a HTML file for reporting
     });
 
     // Timeout ID for message checking loop
@@ -179,24 +178,22 @@ module.exports = function (grunt) {
     };
 
     var writeTestingPage = function (context) {
-      var source = grunt.file.read('testing-template/template.html');
+      var that = this;
+      var source = grunt.file.read('tasks/template.html');
       var template = hbs.compile(source);
       var html = template(context);
       grunt.file.defaultEncoding = 'utf8';
       grunt.file.preserveBOM = false;
-      grunt.file.write(options.reportPath + 'testing-template/layout-regression-test.html', html);
+      grunt.file.write(options.testFolder[0] + '/layout-regression-test.html', html);
     };
 
     var messageHandlers = {
       onFail: function (test) {
-        var extFile = test.filename.substr(test.filename.lastIndexOf('.'));
         grunt.log.writeln('Visual change found for ' + path.basename(test.filename) + ' (' + test.mismatch + '% mismatch)');
         contextLog.items.push({
           name: path.basename(test.filename),
           isPassed: false,
-          imgOrigin: path.basename(test.filename),
-          imgDiff: path.basename(test.filename).replace(extFile, '.diff' + extFile),
-          imgFail: path.basename(test.filename).replace(extFile, '.fail' + extFile),
+          imgFail: options.results + '/' + path.parse(test.filename).name + '.fail' + path.parse(test.filename).ext,
           mismatch: test.mismatch
         });
       },
@@ -211,7 +208,7 @@ module.exports = function (grunt) {
         grunt.log.writeln('Timeout while processing ' + path.basename(test.filename));
         contextLog.items.push({
           name: path.basename(test.filename),
-          isPassed: false
+          isPassed: true
         });
       },
       onComplete: function (allTests, noOfFails, noOfErrors) {
